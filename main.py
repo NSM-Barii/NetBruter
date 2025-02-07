@@ -773,7 +773,8 @@ class extra_shii():
     def discord_webhook(self, ip, port, username, password, login_response, initial_response,post_response ):
         """Responsible for sending information to discord, upon successfull ip found"""
 
-        webhook_url = "https://discord.com/api/webhooks/1332303227252641793/ztflhUtvm4JkXr5tc-J_YaIx62oa_LeqJpgkh0_DRi0TPDAjxR1K1PZeb8fOPQZ1oZl3"
+        # PLACE YOUR DISCORD WEBHOOK INSIDE THE EMPTY STRING
+        webhook_url = ""
         
       #  timestamp = datetime().strftime("%d/%m/%Y, %H:%M:%S")
 

